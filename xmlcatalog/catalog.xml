@@ -3,4 +3,7 @@
 
   <rewriteURI uriStartString="http://transpect.io/ace-daisy/" rewritePrefix="../"/>
   
+  <nextCatalog catalog="../xproc-util/xmlcatalog/catalog.xml"/>
+  <nextCatalog catalog="../xslt-util/xmlcatalog/catalog.xml"/>
+  
 </catalog>
