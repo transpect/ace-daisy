@@ -5,7 +5,9 @@
   xmlns:cx="http://xmlcalabash.com/ns/extensions"
   xmlns:pxf="http://exproc.org/proposed/steps/file"
   xmlns:svrl="http://purl.oclc.org/dsdl/svrl"
-  version="1.0">
+  version="1.0" 
+  name="ace-daisy"
+  type="tr:ace-daisy">
   
   <p:documentation>
     XProc wrapper for DAISY's ACE accessibility checker.
