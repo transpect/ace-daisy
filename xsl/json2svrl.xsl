@@ -88,11 +88,11 @@
                     select="fn:map[@key eq 'earl:result']/fn:string[@key eq 'earl:outcome']"/>
       <xsl:variable name="impact" as="element(fn:string)"
                     select="fn:map[@key eq 'earl:test']/fn:string[@key eq 'earl:impact']"/>
-      <xsl:variable name="message" as="element(fn:string)"
-                    select="fn:map[@key eq 'earl:test']/fn:string[@key eq 'dct:description']"/>
+      <xsl:variable name="messages" as="element(fn:string)+"
+                    select="fn:map[@key eq 'earl:result']/fn:string[@key eq 'dct:description'],
+                            fn:map[@key eq 'earl:test']/fn:map[@key eq 'help']/fn:string[@key eq 'dct:description']"/>
       <xsl:variable name="count" as="xs:integer"
                     select="count(current-group())"/>
-      <xsl:message select="concat('[', $impact, '] ', $title, ': ' , $count)"/>
       <xsl:choose>
         <xsl:when test="$report-type eq 'summary'">
           <span xmlns="http://www.w3.org/1999/xhtml" class="issue">
@@ -100,7 +100,8 @@
           </span>
           <br xmlns="http://www.w3.org/1999/xhtml"/>
           <s:span class="ace">
-            <xsl:value-of select="$message"/>
+            <xsl:sequence select="string-join($messages, '. ')"/>
+            <xsl:value-of select="fn:concat('. (count:', $count, ')')"/>
           </s:span> 
         </xsl:when>
         <xsl:when test="'combined'">
@@ -111,7 +112,8 @@
             <svrl:text>
               <s:span class="srcpath">BC_orphans</s:span>
               <s:span class="ace">
-                <xsl:value-of select="concat($message, ' (', $count, ')')"/>                
+                <xsl:sequence select="string-join($messages, '. ')"/>
+                <xsl:value-of select="fn:concat(' (', $count, ')')"/>                
               </s:span>
             </svrl:text>
           </svrl:failed-assert>    
