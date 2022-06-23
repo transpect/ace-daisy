@@ -140,18 +140,22 @@
                                                 $lang,
                                                 ('-o', $outdir)[$a11y-htmlreport eq 'yes'],
                                                 $epub-path), ' ')"/>
-    <p:when test="$epub-readable and $ace-readable">  
+    <p:when test="$epub-readable eq 'true' and $ace-readable eq 'true'">  
       <p:output port="result" primary="true"/>
       <p:output port="summary" primary="false">
         <p:pipe port="result" step="ace-summary"/>
       </p:output>
       
       <cx:message>
-        <p:with-option name="message" select="'[info] epub path: ', $epub-path"/>
+        <p:with-option name="message" select="'[info] run Daisy ACE accessibility check'"/>
       </cx:message>
       
       <cx:message>
-        <p:with-option name="message" select="'[info] ace path: ', $ace-path"/>
+        <p:with-option name="message" select="'[info] epub path: ', $epub-path, ' (read: ', $epub-readable, ')'"/>
+      </cx:message>
+      
+      <cx:message>
+        <p:with-option name="message" select="'[info] ace path: ', $ace-path, ' (read: ', $ace-readable, ')'"/>
       </cx:message>
       
       <cx:message>
