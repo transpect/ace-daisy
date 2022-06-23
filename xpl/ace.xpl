@@ -16,7 +16,7 @@
     active, then a separate HTML report will be created.
   </p:documentation>
   
-  <p:output port="report" primary="true">
+  <p:output port="result" primary="true">
     <p:documentation>
       SVRL report
     </p:documentation>
