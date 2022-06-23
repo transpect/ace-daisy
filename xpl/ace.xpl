@@ -16,14 +16,14 @@
     active, then a separate HTML report will be created.
   </p:documentation>
   
-  <p:output port="report">
+  <p:output port="report" primary="true">
     <p:documentation>
       SVRL report
     </p:documentation>
     <p:pipe port="result" step="choose"/>
   </p:output>
   
-  <p:output port="summary">
+  <p:output port="summary" primary="false">
     <p:documentation>
       SVRL report just summarized in one validation message.
     </p:documentation>
