@@ -19,6 +19,8 @@
        a11y summary to an existing rule family, e.g. epubcheck -->
   <xsl:param name="rule-family-name" select="'epubcheck 4.2.6'"/>
   <xsl:param name="epub-path" select="'myFile.epub'"/>
+  <xsl:param name="outdir-uri" select="'out'"/>
+  <xsl:param name="a11y-htmlreport" select="'no'"/>
   
   <xsl:template match="/c:result|c:line" mode="normalize-exec-output">
     <xsl:copy>
@@ -36,7 +38,10 @@
   </xsl:template>
   
   <xsl:template match="/" mode="json2svrl">
-    <xsl:variable name="doc" as="document-node(element(fn:map))" select="json-to-xml(xs:string(.))"/>
+    <xsl:variable name="doc" as="document-node(element(fn:map))" 
+                  select="if($a11y-htmlreport eq 'yes') 
+                          then json-to-xml(unparsed-text(concat($outdir-uri, '/report.json')))
+                          else json-to-xml(xs:string(.))"/>
     <cx:documents xmlns:cx="http://xmlcalabash.com/ns/extensions">
       <xsl:apply-templates select="$doc/fn:map/fn:array[@key eq 'assertions']" mode="svrl-summary"/>
       <xsl:apply-templates select="$doc/fn:map/fn:array[@key eq 'assertions']" mode="svrl-combined"/>

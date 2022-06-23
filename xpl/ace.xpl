@@ -53,6 +53,12 @@
     </p:documentation>
   </p:option>
   
+  <p:option name="a11y-htmlreport" select="'yes'">
+    <p:documentation>
+      Creates a separate accessibility HTML report. 
+    </p:documentation>
+  </p:option>
+  
   <p:option name="debug" select="'no'">
     <p:documentation>
       Whether do store debug information
@@ -71,6 +77,16 @@
   
   <tr:file-uri name="get-epub-path">
     <p:with-option name="filename" select="$href"/>
+    <p:input port="catalog">
+      <p:document href="http://this.transpect.io/xmlcatalog/catalog.xml"/>
+    </p:input>
+    <p:input port="resolver">
+      <p:document href="http://transpect.io/xslt-util/xslt-based-catalog-resolver/xsl/resolve-uri-by-catalog.xsl"/>
+    </p:input>
+  </tr:file-uri>
+  
+  <tr:file-uri name="get-outdir-path">
+    <p:with-option name="filename" select="concat(replace(/c:result/@local-href, '^(.+)/.+?$', '$1'), '/a11y')"/>
     <p:input port="catalog">
       <p:document href="http://this.transpect.io/xmlcatalog/catalog.xml"/>
     </p:input>
@@ -108,16 +124,19 @@
     <p:variable name="ace-readable" select="c:file/@readable eq 'true'">
       <p:pipe port="result" step="ace-info"/>
     </p:variable>
-    <p:variable name="ace-path" select="/*/@os-path">
+    <p:variable name="ace-path" select="/c:result/@os-path">
       <p:pipe port="result" step="get-ace-path"/>
     </p:variable>
-    <p:variable name="epub-path" select="/*/@os-path">
+    <p:variable name="epub-path" select="/c:result/@os-path">
       <p:pipe port="result" step="get-epub-path"/>
     </p:variable>
-    <p:variable name="outdir" select="concat(replace($epub-path, '^(.+)/.+?$', '$1'), '/a11y')"/>
+    <p:variable name="outdir" select="/c:result/@os-path">
+      <p:pipe port="result" step="get-outdir-path"/>
+    </p:variable>
     <p:variable name="run" select="string-join(($ace-path, 
-                                                '-l',
-                                                $lang, 
+                                                '--force -l',
+                                                $lang,
+                                                ('-o', $outdir)[$a11y-htmlreport eq 'yes'],
                                                 $epub-path), ' ')"/>
     <p:when test="$epub-readable and $ace-readable">  
       <p:output port="result" primary="true"/>
@@ -159,7 +178,7 @@
         <p:with-option name="base-uri" select="$debug-dir-uri"/>
       </tr:store-debug>
       
-      <p:xslt initial-mode="normalize-exec-output" name="normalize">
+      <p:xslt initial-mode="normalize-exec-output" name="normalize" cx:depends-on="run-ace">
         <p:input port="parameters">
           <p:empty/>
         </p:input>
@@ -168,12 +187,16 @@
         </p:input>
       </p:xslt>
       
-      <p:xslt initial-mode="json2svrl" name="json2svrl">
+      <p:xslt initial-mode="json2svrl" name="json2svrl" cx:depends-on="run-ace">
         <p:input port="stylesheet">
           <p:document href="../xsl/json2svrl.xsl"/>
         </p:input>
         <p:with-param name="rule-family-name" select="$rule-family-name"/>
         <p:with-param name="epub-path" select="$epub-path"/>
+        <p:with-param name="outdir-uri" select="/c:result/@local-href">
+          <p:pipe port="result" step="get-outdir-path"/>
+        </p:with-param>
+        <p:with-param name="a11y-htmlreport" select="$a11y-htmlreport"/>
       </p:xslt>
       
       <p:sink/>
