@@ -61,6 +61,13 @@
     </p:documentation>
   </p:option>
   
+  <p:option name="severity-override" select="''">
+    <p:documentation>
+      This option overrides the default severities of ACE
+      in the SVRL report by the option value. 
+    </p:documentation>
+  </p:option>
+  
   <p:option name="debug" select="'no'">
     <p:documentation>
       Whether do store debug information
@@ -203,6 +210,7 @@
           <p:pipe port="result" step="get-outdir-path"/>
         </p:with-param>
         <p:with-param name="a11y-htmlreport" select="$a11y-htmlreport"/>
+        <p:with-param name="severity-override" select="$severity-override"/>
       </p:xslt>
       
       <p:sink/>

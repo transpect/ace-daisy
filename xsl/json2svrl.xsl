@@ -21,6 +21,7 @@
   <xsl:param name="epub-path" select="'myFile.epub'"/>
   <xsl:param name="outdir-uri" select="'out'"/>
   <xsl:param name="a11y-htmlreport" select="'no'"/>
+  <xsl:param name="severity-override" select="''"/>
   
   <xsl:template match="/c:result|c:line" mode="normalize-exec-output">
     <xsl:copy>
@@ -57,7 +58,7 @@
       <xsl:if test="$all-impacts = ('serious', 'critical', 'moderate')">
         <svrl:failed-assert test="{$epub-path}"
                             id="accessibility"
-                            role="{tr:most-serious-impact($all-impacts)}"
+                            role="{($severity-override[normalize-space(.)] ,tr:most-serious-impact($all-impacts))[1]}"
                             location="BC_orphans">
           <s:span class="srcpath">BC_orphans</s:span>
           <xsl:call-template name="group-issues">
@@ -107,7 +108,7 @@
         <xsl:when test="'combined'">
           <svrl:failed-assert test="{$epub-path}"
                               id="{$title}"
-                              role="{tr:ace-impact-to-svrl-role($impact)}"
+                              role="{($severity-override[normalize-space(.)], tr:ace-impact-to-svrl-role($impact))[1]}"
                               location="BC_orphans">
             <svrl:text>
               <s:span class="srcpath">BC_orphans</s:span>
