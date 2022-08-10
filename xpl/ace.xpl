@@ -5,6 +5,7 @@
   xmlns:cx="http://xmlcalabash.com/ns/extensions"
   xmlns:pxf="http://exproc.org/proposed/steps/file"
   xmlns:svrl="http://purl.oclc.org/dsdl/svrl"
+  xmlns:s="http://purl.oclc.org/dsdl/schematron"
   version="1.0" 
   name="ace-daisy"
   type="tr:ace-daisy">
@@ -20,14 +21,14 @@
     <p:documentation>
       SVRL report
     </p:documentation>
-    <p:pipe port="result" step="choose"/>
+    <p:pipe port="result" step="try"/>
   </p:output>
   
   <p:output port="summary" primary="false">
     <p:documentation>
       SVRL report just summarized in one validation message.
     </p:documentation>
-    <p:pipe port="summary" step="choose"/>
+    <p:pipe port="summary" step="try"/>
   </p:output>
   
   <p:option name="href">
@@ -84,180 +85,229 @@
   <p:import href="http://transpect.io/xproc-util/file-uri/xpl/file-uri.xpl"/>
   <p:import href="http://transpect.io/xproc-util/store-debug/xpl/store-debug.xpl"/>
   
-  <tr:file-uri name="get-epub-path">
-    <p:with-option name="filename" select="$href"/>
-    <p:input port="catalog">
-      <p:document href="http://this.transpect.io/xmlcatalog/catalog.xml"/>
-    </p:input>
-    <p:input port="resolver">
-      <p:document href="http://transpect.io/xslt-util/xslt-based-catalog-resolver/xsl/resolve-uri-by-catalog.xsl"/>
-    </p:input>
-  </tr:file-uri>
-  
-  <tr:file-uri name="get-outdir-path">
-    <p:with-option name="filename" select="concat(replace(/c:result/@local-href, '^(.+)/.+?$', '$1'), '/a11y')"/>
-    <p:input port="catalog">
-      <p:document href="http://this.transpect.io/xmlcatalog/catalog.xml"/>
-    </p:input>
-    <p:input port="resolver">
-      <p:document href="http://transpect.io/xslt-util/xslt-based-catalog-resolver/xsl/resolve-uri-by-catalog.xsl"/>
-    </p:input>
-  </tr:file-uri>
-  
-  <tr:file-uri name="get-ace-path">
-    <p:with-option name="filename" select="$ace"/>
-    <p:input port="catalog">
-      <p:document href="http://this.transpect.io/xmlcatalog/catalog.xml"/>
-    </p:input>
-    <p:input port="resolver">
-      <p:document href="http://transpect.io/xslt-util/xslt-based-catalog-resolver/xsl/resolve-uri-by-catalog.xsl"/>
-    </p:input>
-  </tr:file-uri>
-  
-  <pxf:info name="epub-info" fail-on-error="true">
-    <p:with-option name="href" select="/*/@local-href">
-      <p:pipe port="result" step="get-epub-path"/>
-    </p:with-option>
-  </pxf:info>
-  
-  <p:sink/>
-  
-  <pxf:info name="ace-info" fail-on-error="true">
-    <p:with-option name="href" select="/*/@local-href">
-      <p:pipe port="result" step="get-ace-path"/>
-    </p:with-option>
-  </pxf:info>
-  
-  <p:choose name="choose">
-    <p:variable name="epub-readable" select="c:file/@readable eq 'true'"/>
-    <p:variable name="ace-readable" select="c:file/@readable eq 'true'">
-      <p:pipe port="result" step="ace-info"/>
-    </p:variable>
-    <p:variable name="ace-path" select="/c:result/@os-path">
-      <p:pipe port="result" step="get-ace-path"/>
-    </p:variable>
-    <p:variable name="epub-path" select="/c:result/@os-path">
-      <p:pipe port="result" step="get-epub-path"/>
-    </p:variable>
-    <p:variable name="outdir" select="/c:result/@os-path">
-      <p:pipe port="result" step="get-outdir-path"/>
-    </p:variable>
-    <p:variable name="run" select="string-join(($ace-path, 
-                                                '--force -l',
-                                                $lang,
-                                                ('-o', $outdir)[$a11y-htmlreport eq 'yes'],
-                                                $epub-path), ' ')"/>
-    <p:when test="$epub-readable eq 'true' and $ace-readable eq 'true'">  
-      <p:output port="result" primary="true"/>
+  <p:try name="try">
+    <p:group>
+      <p:output port="result" primary="true">
+        <p:pipe port="result" step="choose"/>
+      </p:output>
       <p:output port="summary" primary="false">
-        <p:pipe port="result" step="ace-summary"/>
+        <p:pipe port="summary" step="choose"/>
       </p:output>
       
-      <cx:message>
-        <p:with-option name="message" select="'[info] run Daisy ACE accessibility check'"/>
-      </cx:message>
-      
-      <cx:message>
-        <p:with-option name="message" select="'[info] epub path: ', $epub-path, ' (read: ', $epub-readable, ')'"/>
-      </cx:message>
-      
-      <cx:message>
-        <p:with-option name="message" select="'[info] ace path: ', $ace-path, ' (read: ', $ace-readable, ')'"/>
-      </cx:message>
-      
-      <cx:message>
-        <p:with-option name="message" select="'[info] output dir: ', $outdir"/>
-      </cx:message>
-      
-      <cx:message>
-        <p:with-option name="message" select="'[info] run: ', $run"/>
-      </cx:message>
-      
-      <p:exec name="run-ace" 
-              result-is-xml="false" 
-              errors-is-xml="false" 
-              wrap-result-lines="true" 
-              wrap-error-lines="false">
-        <p:input port="source">
-          <p:empty/>
+      <tr:file-uri name="get-epub-path">
+        <p:with-option name="filename" select="$href"/>
+        <p:input port="catalog">
+          <p:document href="http://this.transpect.io/xmlcatalog/catalog.xml"/>
         </p:input>
-        <p:with-option name="command" select="'node'"/>
-        <p:with-option name="args" 
-                       select="$run"/>
-      </p:exec>
-      
-      <tr:store-debug pipeline-step="ace/00_exec">
-        <p:with-option name="active" select="$debug"/>
-        <p:with-option name="base-uri" select="$debug-dir-uri"/>
-      </tr:store-debug>
-      
-      <p:xslt initial-mode="normalize-exec-output" name="normalize" cx:depends-on="run-ace">
-        <p:input port="parameters">
-          <p:empty/>
+        <p:input port="resolver">
+          <p:document href="http://transpect.io/xslt-util/xslt-based-catalog-resolver/xsl/resolve-uri-by-catalog.xsl"/>
         </p:input>
-        <p:input port="stylesheet">
-          <p:document href="../xsl/json2svrl.xsl"/>
+      </tr:file-uri>
+  
+      <tr:file-uri name="get-outdir-path">
+        <p:with-option name="filename" select="concat(replace(/c:result/@local-href, '^(.+)/.+?$', '$1'), '/a11y')"/>
+        <p:input port="catalog">
+          <p:document href="http://this.transpect.io/xmlcatalog/catalog.xml"/>
         </p:input>
-      </p:xslt>
+        <p:input port="resolver">
+          <p:document href="http://transpect.io/xslt-util/xslt-based-catalog-resolver/xsl/resolve-uri-by-catalog.xsl"/>
+        </p:input>
+      </tr:file-uri>
       
-      <p:xslt initial-mode="json2svrl" name="json2svrl" cx:depends-on="run-ace">
-        <p:input port="stylesheet">
-          <p:document href="../xsl/json2svrl.xsl"/>
+      <tr:file-uri name="get-ace-path">
+        <p:with-option name="filename" select="$ace"/>
+        <p:input port="catalog">
+          <p:document href="http://this.transpect.io/xmlcatalog/catalog.xml"/>
         </p:input>
-        <p:with-param name="rule-family-name" select="$rule-family-name"/>
-        <p:with-param name="epub-path" select="$epub-path"/>
-        <p:with-param name="outdir-uri" select="/c:result/@local-href">
+        <p:input port="resolver">
+          <p:document href="http://transpect.io/xslt-util/xslt-based-catalog-resolver/xsl/resolve-uri-by-catalog.xsl"/>
+        </p:input>
+      </tr:file-uri>
+      
+      <pxf:info name="epub-info" fail-on-error="true">
+        <p:with-option name="href" select="/*/@local-href">
+          <p:pipe port="result" step="get-epub-path"/>
+        </p:with-option>
+      </pxf:info>
+      
+      <p:sink/>
+      
+      <pxf:info name="ace-info" fail-on-error="true">
+        <p:with-option name="href" select="/*/@local-href">
+          <p:pipe port="result" step="get-ace-path"/>
+        </p:with-option>
+      </pxf:info>
+  
+      <p:choose name="choose">
+        <p:variable name="epub-readable" select="c:file/@readable eq 'true'"/>
+        <p:variable name="ace-readable" select="c:file/@readable eq 'true'">
+          <p:pipe port="result" step="ace-info"/>
+        </p:variable>
+        <p:variable name="ace-path" select="/c:result/@os-path">
+          <p:pipe port="result" step="get-ace-path"/>
+        </p:variable>
+        <p:variable name="epub-path" select="/c:result/@os-path">
+          <p:pipe port="result" step="get-epub-path"/>
+        </p:variable>
+        <p:variable name="outdir" select="/c:result/@os-path">
           <p:pipe port="result" step="get-outdir-path"/>
-        </p:with-param>
-        <p:with-param name="a11y-htmlreport" select="$a11y-htmlreport"/>
-        <p:with-param name="severity-override" select="$severity-override"/>
-      </p:xslt>
+        </p:variable>
+        <p:variable name="run" select="string-join(($ace-path, 
+                                                    '--force -l',
+                                                    $lang,
+                                                    ('-o', $outdir)[$a11y-htmlreport eq 'yes'],
+                                                    $epub-path), ' ')"/>
+        <p:when test="$epub-readable eq 'true' and $ace-readable eq 'true'">  
+          <p:output port="result" primary="true"/>
+          <p:output port="summary" primary="false">
+            <p:pipe port="result" step="ace-summary"/>
+          </p:output>
+          
+          <cx:message>
+            <p:with-option name="message" select="'[info] run Daisy ACE accessibility check'"/>
+          </cx:message>
+          
+          <cx:message>
+            <p:with-option name="message" select="'[info] epub path: ', $epub-path, ' (read: ', $epub-readable, ')'"/>
+          </cx:message>
+          
+          <cx:message>
+            <p:with-option name="message" select="'[info] ace path: ', $ace-path, ' (read: ', $ace-readable, ')'"/>
+          </cx:message>
+          
+          <cx:message>
+            <p:with-option name="message" select="'[info] output dir: ', $outdir"/>
+          </cx:message>
+          
+          <cx:message>
+            <p:with-option name="message" select="'[info] run: ', $run"/>
+          </cx:message>
+          
+          <p:exec name="run-ace" 
+                  result-is-xml="false" 
+                  errors-is-xml="false" 
+                  wrap-result-lines="true" 
+                  wrap-error-lines="false">
+            <p:input port="source">
+              <p:empty/>
+            </p:input>
+            <p:with-option name="command" select="'node'"/>
+            <p:with-option name="args" 
+                           select="$run"/>
+          </p:exec>
+          
+          <tr:store-debug pipeline-step="ace/00_exec">
+            <p:with-option name="active" select="$debug"/>
+            <p:with-option name="base-uri" select="$debug-dir-uri"/>
+          </tr:store-debug>
+          
+          <p:xslt initial-mode="normalize-exec-output" name="normalize" cx:depends-on="run-ace">
+            <p:input port="parameters">
+              <p:empty/>
+            </p:input>
+            <p:input port="stylesheet">
+              <p:document href="../xsl/json2svrl.xsl"/>
+            </p:input>
+          </p:xslt>
+          
+          <p:xslt initial-mode="json2svrl" name="json2svrl" cx:depends-on="run-ace">
+            <p:input port="stylesheet">
+              <p:document href="../xsl/json2svrl.xsl"/>
+            </p:input>
+            <p:with-param name="rule-family-name" select="$rule-family-name"/>
+            <p:with-param name="epub-path" select="$epub-path"/>
+            <p:with-param name="outdir-uri" select="/c:result/@local-href">
+              <p:pipe port="result" step="get-outdir-path"/>
+            </p:with-param>
+            <p:with-param name="a11y-htmlreport" select="$a11y-htmlreport"/>
+            <p:with-param name="severity-override" select="$severity-override"/>
+          </p:xslt>
+          
+          <p:sink/>
+          
+          <p:identity name="ace-summary">
+            <p:input port="source" select="/cx:documents/svrl:schematron-output[@title eq 'ace-summary']">
+              <p:pipe port="result" step="json2svrl"/>
+            </p:input>
+          </p:identity>
+          
+          <tr:store-debug pipeline-step="ace/04_ace-summary">
+            <p:with-option name="active" select="$debug"/>
+            <p:with-option name="base-uri" select="$debug-dir-uri"/>
+          </tr:store-debug>
+          
+          <p:sink/>
+          
+          <p:identity name="ace-report">
+            <p:input port="source" select="/cx:documents/svrl:schematron-output[@title eq 'ace-report']">
+              <p:pipe port="result" step="json2svrl"/>
+            </p:input>
+          </p:identity>
+          
+          <tr:store-debug pipeline-step="ace/08_ace-report">
+            <p:with-option name="active" select="$debug"/>
+            <p:with-option name="base-uri" select="$debug-dir-uri"/>
+          </tr:store-debug>
+          
+        </p:when>
+        <p:otherwise>
+          <p:output port="result" primary="true"/>
+          <p:output port="summary" primary="false">
+            <p:pipe port="result" step="add-rule-family"/>
+          </p:output>
+          
+          <p:add-attribute match="/c:errors" attribute-name="tr:rule-family" name="add-rule-family">
+            <p:with-option name="attribute-value" select="$rule-family-name"/>
+            <p:input port="source">
+              <p:inline>
+                <c:errors>
+                  <c:error code="ace-failed" role="fatal-error">failed while creating the accessibility report.</c:error>
+                </c:errors>
+              </p:inline>
+            </p:input>
+          </p:add-attribute>
+          
+        </p:otherwise>
+      </p:choose>
       
-      <p:sink/>
-      
-      <p:identity name="ace-summary">
-        <p:input port="source" select="/cx:documents/svrl:schematron-output[@title eq 'ace-summary']">
-          <p:pipe port="result" step="json2svrl"/>
-        </p:input>
-      </p:identity>
-      
-      <tr:store-debug pipeline-step="ace/04_ace-summary">
-        <p:with-option name="active" select="$debug"/>
-        <p:with-option name="base-uri" select="$debug-dir-uri"/>
-      </tr:store-debug>
-      
-      <p:sink/>
-      
-      <p:identity name="ace-report">
-        <p:input port="source" select="/cx:documents/svrl:schematron-output[@title eq 'ace-report']">
-          <p:pipe port="result" step="json2svrl"/>
-        </p:input>
-      </p:identity>
-      
-      <tr:store-debug pipeline-step="ace/08_ace-report">
-        <p:with-option name="active" select="$debug"/>
-        <p:with-option name="base-uri" select="$debug-dir-uri"/>
-      </tr:store-debug>
-      
-    </p:when>
-    <p:otherwise>
+    </p:group>
+    <p:catch>
       <p:output port="result" primary="true"/>
       <p:output port="summary" primary="false">
-        <p:pipe port="result" step="add-rule-family"/>
+        <p:pipe port="result" step="error-ace-summary"/>
       </p:output>
       
-      <p:add-attribute match="/c:errors" attribute-name="tr:rule-family" name="add-rule-family">
-        <p:with-option name="attribute-value" select="$rule-family-name"/>
+      <p:add-attribute attribute-name="tr:rule-family" match="svrl:schematron-output" name="error-ace-summary">
         <p:input port="source">
           <p:inline>
-            <c:errors>
-              <c:error code="ace-failed" role="fatal-error">failed while creating the accessibility report.</c:error>
-            </c:errors>
+            <svrl:schematron-output title="ace-summary" tr:step-name="accessibility">
+              <svrl:failed-assert id="accessibility" role="fatal-error" location="BC_orphans">
+                <s:span class="srcpath">BC_orphans</s:span>
+                ACE accessibility check failed. This issue could be caused to an invalid EPUB.
+              </svrl:failed-assert>
+            </svrl:schematron-output>
           </p:inline>
         </p:input>
+        <p:with-option name="attribute-value" select="$rule-family-name"/>
       </p:add-attribute>
       
-    </p:otherwise>
-  </p:choose>
+      <p:sink/>
+      
+      <p:add-attribute attribute-name="tr:rule-family" match="svrl:schematron-output" name="error-ace-report">
+        <p:input port="source">
+          <p:inline>
+            <svrl:schematron-output title="ace-report" tr:step-name="accessibility">
+              <svrl:failed-assert id="accessibility" role="fatal-error" location="BC_orphans">
+                <s:span class="srcpath">BC_orphans</s:span>
+                ACE accessibility check failed. This issue could be caused to an invalid EPUB.
+              </svrl:failed-assert>
+            </svrl:schematron-output>
+          </p:inline>
+        </p:input>
+        <p:with-option name="attribute-value" select="$rule-family-name"/>
+      </p:add-attribute>
+      
+    </p:catch>
+  </p:try>
   
 </p:declare-step>
