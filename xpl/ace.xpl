@@ -103,8 +103,16 @@
           <p:document href="http://transpect.io/xslt-util/xslt-based-catalog-resolver/xsl/resolve-uri-by-catalog.xsl"/>
         </p:input>
       </tr:file-uri>
+      
+      <cx:message cx:depends-on="get-epub-path" name="msg1">
+        <p:with-option name="message" select="'[info] run Daisy ACE accessibility check'"/>
+      </cx:message>
+      
+      <cx:message cx:depends-on="get-epub-path" name="msg2">
+        <p:with-option name="message" select="'[info] epub: ', /c:result/@local-href"/>
+      </cx:message>
   
-      <tr:file-uri name="get-outdir-path">
+      <tr:file-uri name="get-outdir-path" cx:depends-on="get-epub-path">
         <p:with-option name="filename" select="concat(replace(/c:result/@local-href, '^(.+)/.+?$', '$1'), '/a11y')"/>
         <p:input port="catalog">
           <p:document href="http://this.transpect.io/xmlcatalog/catalog.xml"/>
@@ -114,7 +122,11 @@
         </p:input>
       </tr:file-uri>
       
-      <tr:file-uri name="get-ace-path">
+      <cx:message cx:depends-on="get-epub-path" name="msg3">
+        <p:with-option name="message" select="'[info] outdir: ', /c:result/@local-href"/>
+      </cx:message>
+      
+      <tr:file-uri name="get-ace-path" cx:depends-on="get-outdir-path">
         <p:with-option name="filename" select="$ace"/>
         <p:input port="catalog">
           <p:document href="http://this.transpect.io/xmlcatalog/catalog.xml"/>
@@ -124,7 +136,11 @@
         </p:input>
       </tr:file-uri>
       
-      <pxf:info name="epub-info" fail-on-error="true">
+      <cx:message cx:depends-on="get-ace-path" name="msg4">
+        <p:with-option name="message" select="'[info] ace: ', /c:result/@local-href"/>
+      </cx:message>
+      
+      <pxf:info name="epub-info" fail-on-error="false" cx:depends-on="get-epub-path">
         <p:with-option name="href" select="/*/@local-href">
           <p:pipe port="result" step="get-epub-path"/>
         </p:with-option>
@@ -132,13 +148,13 @@
       
       <p:sink/>
       
-      <pxf:info name="ace-info" fail-on-error="true">
+      <pxf:info name="ace-info" fail-on-error="false" cx:depends-on="get-ace-path">
         <p:with-option name="href" select="/*/@local-href">
           <p:pipe port="result" step="get-ace-path"/>
         </p:with-option>
       </pxf:info>
   
-      <p:choose name="choose">
+      <p:choose name="choose" cx:depends-on="ace-info">
         <p:variable name="epub-readable" select="c:file/@readable eq 'true'"/>
         <p:variable name="ace-readable" select="c:file/@readable eq 'true'">
           <p:pipe port="result" step="ace-info"/>
@@ -152,9 +168,13 @@
         <p:variable name="outdir" select="/c:result/@os-path">
           <p:pipe port="result" step="get-outdir-path"/>
         </p:variable>
+        <p:variable name="tmpdir" select="concat($outdir, '/tmp')">
+          <p:pipe port="result" step="get-outdir-path"/>
+        </p:variable>
         <p:variable name="run" select="string-join(($ace-path, 
                                                     '--force -l',
                                                     $lang,
+                                                    ('-t', $tmpdir)[$a11y-htmlreport eq 'yes'],
                                                     ('-o', $outdir)[$a11y-htmlreport eq 'yes'],
                                                     $epub-path), ' ')"/>
         <p:when test="$epub-readable eq 'true' and $ace-readable eq 'true'">  
@@ -163,23 +183,19 @@
             <p:pipe port="result" step="ace-summary"/>
           </p:output>
           
-          <cx:message>
-            <p:with-option name="message" select="'[info] run Daisy ACE accessibility check'"/>
+          <cx:message name="msg5">
+            <p:with-option name="message" select="'[info] epub readable: ', $epub-readable"/>
           </cx:message>
           
-          <cx:message>
-            <p:with-option name="message" select="'[info] epub path: ', $epub-path, ' (read: ', $epub-readable, ')'"/>
+          <cx:message name="msg6">
+            <p:with-option name="message" select="'[info] ace readable: ', $ace-readable"/>
           </cx:message>
           
-          <cx:message>
-            <p:with-option name="message" select="'[info] ace path: ', $ace-path, ' (read: ', $ace-readable, ')'"/>
-          </cx:message>
-          
-          <cx:message>
+          <cx:message name="msg7">
             <p:with-option name="message" select="'[info] output dir: ', $outdir"/>
           </cx:message>
           
-          <cx:message>
+          <cx:message name="msg8">
             <p:with-option name="message" select="'[info] run: ', $run"/>
           </cx:message>
           
