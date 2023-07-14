@@ -187,7 +187,7 @@
                                                     ('-t', $tmpdir)[$a11y-htmlreport eq 'yes'],
                                                     ('-o', $outdir)[$a11y-htmlreport eq 'yes'],
                                                     $epub-path), ' ')"/>
-        <p:when test="$epub-readable eq 'true' and $ace-readable eq 'false'">  
+        <p:when test="$epub-readable eq 'true' and $ace-readable eq 'true'">  
           <p:output port="result" primary="true"/>
           <p:output port="summary" primary="false">
             <p:pipe port="result" step="ace-summary"/>
