@@ -147,7 +147,7 @@
       </pxf:info>
       
       <cx:message name="msg5">
-        <p:with-option name="message" select="'[info] epub readable: ', c:file/@readable eq 'true'"/>
+        <p:with-option name="message" select="'[info] epub readable: ', (c:file/@readable, 'false')[1]"/>
       </cx:message>
       
       <p:sink/>
@@ -273,6 +273,10 @@
           <p:output port="summary" primary="false">
             <p:pipe port="result" step="add-rule-family"/>
           </p:output>
+          
+          <cx:message name="msg9">
+            <p:with-option name="message" select="'[warn] could not exec ace: epub file or ace.js is not readable'"/>
+          </cx:message>
           
           <p:add-attribute match="/c:errors" attribute-name="tr:rule-family" name="add-rule-family">
             <p:with-option name="attribute-value" select="$rule-family-name"/>
