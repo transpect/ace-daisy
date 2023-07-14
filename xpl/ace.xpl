@@ -146,6 +146,10 @@
         </p:with-option>
       </pxf:info>
       
+      <cx:message name="msg5">
+        <p:with-option name="message" select="'[info] epub readable: ', c:file/@readable eq 'true'"/>
+      </cx:message>
+      
       <p:sink/>
       
       <pxf:info name="ace-info" fail-on-error="false" cx:depends-on="get-ace-path">
@@ -153,11 +157,17 @@
           <p:pipe port="result" step="get-ace-path"/>
         </p:with-option>
       </pxf:info>
-  
+      
+      <cx:message name="msg6" cx:depends-on="ace-info">
+        <p:with-option name="message" select="if(exists(/c:error)) 
+                                              then '[error] ace file does not exist or is not readable' 
+                                              else concat('[info] ace readable: ', c:file/@readable)"/>
+      </cx:message>
+      
       <p:choose name="choose" cx:depends-on="ace-info">
-        <p:variable name="epub-readable" select="c:file/@readable eq 'true'"/>
-        <p:variable name="ace-readable" select="c:file/@readable eq 'true'">
-          <p:pipe port="result" step="ace-info"/>
+        <p:variable name="ace-readable" select="c:file/@readable eq 'true'"/>
+        <p:variable name="epub-readable" select="c:file/@readable eq 'true'">
+          <p:pipe port="result" step="epub-info"/>
         </p:variable>
         <p:variable name="ace-path" select="/c:result/@os-path">
           <p:pipe port="result" step="get-ace-path"/>
@@ -177,19 +187,11 @@
                                                     ('-t', $tmpdir)[$a11y-htmlreport eq 'yes'],
                                                     ('-o', $outdir)[$a11y-htmlreport eq 'yes'],
                                                     $epub-path), ' ')"/>
-        <p:when test="$epub-readable eq 'true' and $ace-readable eq 'true'">  
+        <p:when test="$epub-readable eq 'true' and $ace-readable eq 'false'">  
           <p:output port="result" primary="true"/>
           <p:output port="summary" primary="false">
             <p:pipe port="result" step="ace-summary"/>
           </p:output>
-          
-          <cx:message name="msg5">
-            <p:with-option name="message" select="'[info] epub readable: ', $epub-readable"/>
-          </cx:message>
-          
-          <cx:message name="msg6">
-            <p:with-option name="message" select="'[info] ace readable: ', $ace-readable"/>
-          </cx:message>
           
           <cx:message name="msg7">
             <p:with-option name="message" select="'[info] output dir: ', $outdir"/>
