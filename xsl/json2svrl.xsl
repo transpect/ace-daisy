@@ -23,7 +23,15 @@
   <xsl:param name="a11y-htmlreport" select="'no'"/>
   <xsl:param name="severity-override" select="''"/>
   
-  <xsl:template match="/c:result|c:line" mode="normalize-exec-output">
+  <xsl:template match="/c:result" mode="normalize-exec-output">
+    <xsl:copy>
+      <xsl:attribute name="outdir-uri" select="$outdir-uri"/>
+      <xsl:attribute name="epub-path" select="$epub-path"/>
+      <xsl:apply-templates mode="#current"/>  
+    </xsl:copy>
+  </xsl:template>
+  
+  <xsl:template match="c:line" mode="normalize-exec-output">
     <xsl:copy>
       <xsl:apply-templates mode="#current"/>  
     </xsl:copy>

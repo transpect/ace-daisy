@@ -226,6 +226,10 @@
             <p:input port="stylesheet">
               <p:document href="../xsl/json2svrl.xsl"/>
             </p:input>
+            <p:with-param name="epub-path" select="$epub-path"/>
+            <p:with-param name="outdir-uri" select="/c:result/@local-href">
+              <p:pipe port="result" step="get-outdir-path"/>
+            </p:with-param>
           </p:xslt>
           
           <tr:store-debug pipeline-step="ace/02_normalize">
