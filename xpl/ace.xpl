@@ -184,8 +184,8 @@
         <p:variable name="run" select="string-join(($ace-path, 
                                                     '--force -s -l',
                                                     $lang,
-                                                    ('-t', $tmpdir)[$a11y-htmlreport eq 'yes'],
-                                                    ('-o', $outdir)[$a11y-htmlreport eq 'yes'],
+                                                    ('-t', $tmpdir),
+                                                    ('-o', $outdir),
                                                     $epub-path), ' ')"/>
         <p:when test="$epub-readable eq 'true' and $ace-readable eq 'true'">  
           <p:output port="result" primary="true"/>
@@ -215,24 +215,6 @@
           </p:exec>
           
           <tr:store-debug pipeline-step="ace/00_exec">
-            <p:with-option name="active" select="$debug"/>
-            <p:with-option name="base-uri" select="$debug-dir-uri"/>
-          </tr:store-debug>
-          
-          <p:xslt initial-mode="normalize-exec-output" name="normalize" cx:depends-on="run-ace">
-            <p:input port="parameters">
-              <p:empty/>
-            </p:input>
-            <p:input port="stylesheet">
-              <p:document href="../xsl/json2svrl.xsl"/>
-            </p:input>
-            <p:with-param name="epub-path" select="$epub-path"/>
-            <p:with-param name="outdir-uri" select="/c:result/@local-href">
-              <p:pipe port="result" step="get-outdir-path"/>
-            </p:with-param>
-          </p:xslt>
-          
-          <tr:store-debug pipeline-step="ace/02_normalize">
             <p:with-option name="active" select="$debug"/>
             <p:with-option name="base-uri" select="$debug-dir-uri"/>
           </tr:store-debug>

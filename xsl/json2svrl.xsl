@@ -23,34 +23,9 @@
   <xsl:param name="a11y-htmlreport" select="'no'"/>
   <xsl:param name="severity-override" select="''"/>
   
-  <xsl:template match="/c:result" mode="normalize-exec-output">
-    <xsl:copy>
-      <xsl:attribute name="outdir-uri" select="$outdir-uri"/>
-      <xsl:attribute name="epub-path" select="$epub-path"/>
-      <xsl:apply-templates mode="#current"/>  
-    </xsl:copy>
-  </xsl:template>
-  
-  <xsl:template match="c:line" mode="normalize-exec-output">
-    <xsl:copy>
-      <xsl:apply-templates mode="#current"/>  
-    </xsl:copy>
-  </xsl:template>
-  
-  <xsl:template match="c:line[following-sibling::c:line[. eq '{']]
-                      |c:line[preceding-sibling::c:line[. eq '}']]"  mode="normalize-exec-output">
-    
-  </xsl:template>
-  
-  <xsl:template match="text()" mode="normalize-exec-output">
-    <xsl:value-of select="replace(., '\p{Cc}', '')"/>
-  </xsl:template>
-  
   <xsl:template match="/" mode="json2svrl">
     <xsl:variable name="doc" as="document-node(element(fn:map))" 
-                  select="if($a11y-htmlreport eq 'yes') 
-                          then json-to-xml(unparsed-text(concat($outdir-uri, '/report.json')))
-                          else json-to-xml(xs:string(.))"/>
+                  select="json-to-xml(unparsed-text(concat($outdir-uri, '/report.json')))"/>
     <cx:documents xmlns:cx="http://xmlcalabash.com/ns/extensions">
       <xsl:apply-templates select="$doc/fn:map/fn:array[@key eq 'assertions']" mode="svrl-summary"/>
       <xsl:apply-templates select="$doc/fn:map/fn:array[@key eq 'assertions']" mode="svrl-combined"/>
