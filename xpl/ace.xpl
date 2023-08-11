@@ -182,7 +182,7 @@
           <p:pipe port="result" step="get-outdir-path"/>
         </p:variable>
         <p:variable name="run" select="string-join(($ace-path, 
-                                                    '--force -l',
+                                                    '--force -s -l',
                                                     $lang,
                                                     ('-t', $tmpdir)[$a11y-htmlreport eq 'yes'],
                                                     ('-o', $outdir)[$a11y-htmlreport eq 'yes'],
@@ -227,6 +227,11 @@
               <p:document href="../xsl/json2svrl.xsl"/>
             </p:input>
           </p:xslt>
+          
+          <tr:store-debug pipeline-step="ace/02_normalize">
+            <p:with-option name="active" select="$debug"/>
+            <p:with-option name="base-uri" select="$debug-dir-uri"/>
+          </tr:store-debug>
           
           <p:xslt initial-mode="json2svrl" name="json2svrl" cx:depends-on="run-ace">
             <p:input port="stylesheet">
