@@ -31,7 +31,7 @@
     <p:pipe port="summary" step="try"/>
   </p:output>
   
-  <p:option name="href">
+  <p:option name="href" required="true">
     <p:documentation>
       Path to EPUB file. A separate ACE report would be created in the same directory.
     </p:documentation>
