@@ -197,7 +197,7 @@
             <p:with-option name="message" select="'[info] output dir: ', $outdir"/>
           </cx:message>
           
-          <cx:message name="msg8">
+          <cx:message name="msg8" cx:depends-on="msg7">
             <p:with-option name="message" select="'[info] run: ', $run"/>
           </cx:message>
           
@@ -205,7 +205,8 @@
                   result-is-xml="false" 
                   errors-is-xml="false" 
                   wrap-result-lines="true" 
-                  wrap-error-lines="false">
+                  wrap-error-lines="false"
+                  cx:depends-on="msg8">
             <p:input port="source">
               <p:empty/>
             </p:input>
