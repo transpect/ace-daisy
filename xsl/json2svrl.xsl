@@ -22,21 +22,38 @@
   <xsl:param name="outdir-uri" select="'out'"/>
   <xsl:param name="a11y-htmlreport" select="'no'"/>
   <xsl:param name="severity-override" select="''"/>
+  <xsl:param name="add-ace-version" select="'no'"/>
   
   <xsl:template match="/" mode="json2svrl">
     <xsl:variable name="doc" as="document-node(element(fn:map))" 
                   select="json-to-xml(unparsed-text(concat($outdir-uri, '/report.json')))"/>
+    <xsl:variable name="rule-family-name-expanded" as="xs:string" 
+                  select="if ($add-ace-version = ('yes', 'true'))
+                          then
+                             concat(
+                                $rule-family-name,
+                                ' (',
+                                $doc/fn:map/fn:map[@key eq 'earl:assertedBy']/fn:string[@key = 'doap:name'],
+                                ' ',
+                                $doc/fn:map/fn:map[@key eq 'earl:assertedBy']/fn:map[@key eq 'doap:release']/fn:string[@key = 'doap:revision'],
+                                ')')
+                          else $rule-family-name"/>
     <cx:documents xmlns:cx="http://xmlcalabash.com/ns/extensions">
-      <xsl:apply-templates select="$doc/fn:map/fn:array[@key eq 'assertions']" mode="svrl-summary"/>
-      <xsl:apply-templates select="$doc/fn:map/fn:array[@key eq 'assertions']" mode="svrl-combined"/>
+      <xsl:apply-templates select="$doc/fn:map/fn:array[@key eq 'assertions']" mode="svrl-summary">
+        <xsl:with-param name="rule-family-name-expanded" select="$rule-family-name-expanded" tunnel="yes"/>
+      </xsl:apply-templates>
+      <xsl:apply-templates select="$doc/fn:map/fn:array[@key eq 'assertions']" mode="svrl-combined">
+        <xsl:with-param name="rule-family-name-expanded" select="$rule-family-name-expanded" tunnel="yes"/>
+      </xsl:apply-templates>
     </cx:documents>  
   </xsl:template>
   
   <xsl:template match="/fn:map/fn:array[@key eq 'assertions']" mode="svrl-summary">
+    <xsl:param name="rule-family-name-expanded" tunnel="yes"/>
     <xsl:variable name="all-impacts" as="element(fn:string)*" 
                   select="//fn:map[@key eq 'earl:test']/fn:string[@key eq 'earl:impact']"/>
     <svrl:schematron-output title="ace-summary"
-                            tr:rule-family="{$rule-family-name}"
+                            tr:rule-family="{$rule-family-name-expanded}"
                             tr:step-name="accessibility">
       <xsl:if test="$all-impacts = ('serious', 'critical', 'moderate')">
         <svrl:failed-assert test="{$epub-path}"
@@ -53,8 +70,9 @@
   </xsl:template>
   
   <xsl:template match="/fn:map/fn:array[@key eq 'assertions']" mode="svrl-combined">
+    <xsl:param name="rule-family-name-expanded" tunnel="yes"/>
     <svrl:schematron-output title="ace-report"
-                            tr:rule-family="{$rule-family-name}"
+                            tr:rule-family="{$rule-family-name-expanded}"
                             tr:step-name="accessibility">
       <xsl:call-template name="group-issues">
         <xsl:with-param name="report-type" select="'combined'" as="xs:string"/>

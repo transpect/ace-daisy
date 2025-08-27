@@ -69,6 +69,12 @@
     </p:documentation>
   </p:option>
   
+  <p:option name="add-ace-version" select="'no'">
+    <p:documentation>
+      If set to 'yes': ACE version is added to rule-family-name.
+    </p:documentation>
+  </p:option>
+  
   <p:option name="debug" select="'no'">
     <p:documentation>
       Whether do store debug information
@@ -231,6 +237,7 @@
             </p:with-param>
             <p:with-param name="a11y-htmlreport" select="$a11y-htmlreport"/>
             <p:with-param name="severity-override" select="$severity-override"/>
+            <p:with-param name="add-ace-version" select="$add-ace-version"/>
           </p:xslt>
           
           <p:sink/>
