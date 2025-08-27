@@ -71,13 +71,17 @@
   
   <xsl:template match="/fn:map/fn:array[@key eq 'assertions']" mode="svrl-combined">
     <xsl:param name="rule-family-name-expanded" tunnel="yes"/>
-    <svrl:schematron-output title="ace-report"
-                            tr:rule-family="{$rule-family-name-expanded}"
-                            tr:step-name="accessibility">
+    <xsl:variable name="issues">  
       <xsl:call-template name="group-issues">
         <xsl:with-param name="report-type" select="'combined'" as="xs:string"/>
       </xsl:call-template>
-    </svrl:schematron-output>
+    </xsl:variable>
+    <xsl:element name="{if ($issues/*) then 'svrl:schematron-output' else 'c:ok'}">
+      <xsl:attribute name="title" select="'ace-report'"/>
+      <xsl:attribute name="tr:rule-family" select="$rule-family-name-expanded"/>
+      <xsl:attribute name="tr:step-name" select="'accessibility'"/>
+      <xsl:sequence select="$issues"/>
+    </xsl:element> 
   </xsl:template>
   
   <xsl:template name="group-issues">

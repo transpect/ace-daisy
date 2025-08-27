@@ -243,7 +243,7 @@
           <p:sink/>
           
           <p:identity name="ace-summary">
-            <p:input port="source" select="/cx:documents/svrl:schematron-output[@title eq 'ace-summary']">
+            <p:input port="source" select="/cx:documents/*[self::svrl:schematron-output|self::c:ok][@title eq 'ace-summary']">
               <p:pipe port="result" step="json2svrl"/>
             </p:input>
           </p:identity>
@@ -256,7 +256,7 @@
           <p:sink/>
           
           <p:identity name="ace-report">
-            <p:input port="source" select="/cx:documents/svrl:schematron-output[@title eq 'ace-report']">
+            <p:input port="source" select="//cx:documents/*[self::svrl:schematron-output|self::c:ok][@title eq 'ace-report']">
               <p:pipe port="result" step="json2svrl"/>
             </p:input>
           </p:identity>
@@ -298,7 +298,7 @@
         <p:pipe port="result" step="error-ace-summary"/>
       </p:output>
       
-      <p:add-attribute attribute-name="tr:rule-family" match="svrl:schematron-output" name="error-ace-summary">
+      <p:add-attribute attribute-name="tr:rule-family" match="svrl:schematron-output|c:ok" name="error-ace-summary">
         <p:input port="source">
           <p:inline>
             <svrl:schematron-output title="ace-summary" tr:step-name="accessibility">
